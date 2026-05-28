@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero Waste Savings Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f7f4ef;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    color: #2a2318;
+  }
+
+  .calc {
+    max-width: 640px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1.5px solid #d8d0c4;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .calc-header {
+    background: #2a2318;
+    padding: 2rem 2rem 1.5rem;
+    color: #f7f4ef;
+  }
+
+  .calc-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .calc-header h1 em {
+    font-style: italic;
+    color: #a8c5a0;
+  }
+
+  .calc-header p {
+    font-size: 0.8rem;
+    color: #9e9284;
+    letter-spacing: 0.03em;
+  }
+
+  .calc-body { padding: 1.75rem 2rem; }
+
+  .col-headers {
+    display: grid;
+    grid-template-columns: 1fr 28px 1fr;
+    gap: 8px;
+    margin-bottom: 0.75rem;
+  }
+
+  .col-headers span {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #9e9284;
+    font-weight: 500;
+  }
+
+  .col-headers span:last-child { color: #5a8a52; }
+
+  .product-row {
+    display: grid;
+    grid-template-columns: 1fr 28px 1fr;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 0.75rem;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 3px; }
+
+  .field label {
+    font-size: 0.72rem;
+    color: #7a6f63;
+    letter-spacing: 0.02em;
+  }
+
+  .dollar-wrap { position: relative; }
+
+  .dollar-wrap::before {
+    content: '$';
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #9e9284;
+    pointer-events: none;
+  }
+
+  .dollar-wrap input {
+    width: 100%;
+    padding: 7px 8px 7px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: #2a2318;
+    background: #faf8f5;
+    border: 1px solid #d8d0c4;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  .dollar-wrap input::-webkit-outer-spin-button,
+  .dollar-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .dollar-wrap input:focus { border-color: #5a8a52; background: #fff; }
+
+  .arrow {
+    font-size: 0.75rem;
+    color: #c4bdb4;
+    text-align: center;
+    padding-bottom: 9px;
+  }
+
+  .freq-section { margin-top: 1.25rem; }
+
+  .section-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #9e9284;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #ede8e0;
+  }
+
+  .freq-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 0.6rem;
+  }
+
+  .freq-row .field label { font-size: 0.72rem; color: #7a6f63; }
+
+  select {
+    width: 100%;
+    padding: 7px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    color: #2a2318;
+    background: #faf8f5;
+    border: 1px solid #d8d0c4;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239e9284' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+    transition: border-color 0.15s;
+  }
+
+  select:focus { border-color: #5a8a52; }
+
+  .results {
+    margin-top: 1.75rem;
+    background: #2a2318;
+    border-radius: 2px;
+    padding: 1.5rem;
+    color: #f7f4ef;
+  }
+
+  .results-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .result-card {}
+
+  .result-card .rlabel {
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9e9284;
+    margin-bottom: 4px;
+  }
+
+  .result-card .rvalue {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem;
+    font-weight: 400;
+    color: #f7f4ef;
+  }
+
+  .savings-banner {
+    background: #3d5c37;
+    border-radius: 2px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .savings-banner.overspend { background: #5c3d37; }
+
+  .savings-banner .slabel {
+    font-size: 0.7rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #a8c5a0;
+  }
+
+  .savings-banner.overspend .slabel { color: #c5a8a8; }
+
+  .savings-banner .svalue {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: #a8c5a0;
+    white-space: nowrap;
+  }
+
+  .savings-banner.overspend .svalue { color: #c5a8a8; }
+
+  .bars { margin-top: 1.5rem; }
+
+  .bar-product { margin-bottom: 1rem; }
+
+  .bar-product-name {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: #7a6f63;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .bar-track {
+    background: #ede8e0;
+    border-radius: 1px;
+    height: 28px;
+    position: relative;
+    margin-bottom: 4px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 1px;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    min-width: 36px;
+  }
+
+  .bar-trad { background: #c4bdb4; color: #2a2318; }
+  .bar-zw { background: #a8c5a0; color: #1e3b1a; }
+
+  .bar-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 1rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: #7a6f63;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .tip-box {
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: #f3f0ea;
+    border-left: 3px solid #a8c5a0;
+    font-size: 0.82rem;
+    color: #5a5046;
+    line-height: 1.65;
+  }
+
+  .tip-box strong { color: #2a2318; font-weight: 500; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #ede8e0;
+    margin: 1.25rem 0;
+  }
+
+  @media (max-width: 480px) {
+    .calc-body { padding: 1.25rem 1.25rem; }
+    .calc-header { padding: 1.5rem 1.25rem 1.25rem; }
+    .freq-row { grid-template-columns: 1fr; }
+    .results-row { grid-template-columns: 1fr 1fr; }
+    .calc-header h1 { font-size: 1.45rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="calc" role="main">
+  <div class="calc-header">
+    <h1>Could zero waste<br>save you <em>money?</em></h1>
+    <p>Enter what you spend on each product to find out.</p>
+  </div>
+
+  <div class="calc-body">
+
+    <div class="col-headers">
+      <span>Traditional</span>
+      <span></span>
+      <span>Zero waste alt.</span>
+    </div>
+
+    <div id="products-list"></div>
+
+    <hr class="divider">
+
+    <div class="freq-section">
+      <p class="section-title">How often do you buy each?</p>
+      <div id="freq-list"></div>
+    </div>
+
+    <div class="results" id="results">
+      <div class="results-row">
+        <div class="result-card">
+          <p class="rlabel">Traditional / year</p>
+          <p class="rvalue" id="trad-total">$0</p>
+        </div>
+        <div class="result-card">
+          <p class="rlabel">Zero waste / year</p>
+          <p class="rvalue" id="zw-total">$0</p>
+        </div>
+      </div>
+      <div class="savings-banner" id="savings-banner">
+        <div>
+          <p class="slabel" id="savings-label">Annual savings</p>
+          <p class="svalue" id="savings-value">$0</p>
+        </div>
+        <div style="font-size: 0.75rem; color: #a8c5a0; max-width: 160px; line-height: 1.5;" id="savings-sub"></div>
+      </div>
+    </div>
+
+    <div class="bars" id="bars-wrap">
+      <p class="section-title" style="margin-top: 1.5rem;">Breakdown by product</p>
+      <div class="bar-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#c4bdb4;"></div>Traditional</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a8c5a0;"></div>Zero waste</div>
+      </div>
+      <div id="bars"></div>
+    </div>
+
+    <div class="tip-box" id="tip-box">
+      Adjust the prices above to reflect what you actually pay — then see how the numbers stack up over a full year.
+    </div>
+
+  </div>
+</div>
+
+<script>
+const products = [
+  { id: 'shampoo',     label: 'Shampoo',      zwLabel: 'Shampoo bar',      defaultTrad: 8,  defaultZW: 12, freqMonths: 2 },
+  { id: 'conditioner', label: 'Conditioner',   zwLabel: 'Conditioner bar',  defaultTrad: 9,  defaultZW: 14, freqMonths: 2 },
+  { id: 'bodywash',    label: 'Body wash',     zwLabel: 'Soap bar',         defaultTrad: 6,  defaultZW: 7,  freqMonths: 1.5 },
+  { id: 'deodorant',   label: 'Deodorant',     zwLabel: 'Deodorant stick',  defaultTrad: 7,  defaultZW: 14, freqMonths: 2 },
+  { id: 'toothpaste',  label: 'Toothpaste',    zwLabel: 'Toothpaste tabs',  defaultTrad: 5,  defaultZW: 10, freqMonths: 2 },
+  { id: 'cleanser',    label: 'Face cleanser', zwLabel: 'Cleanser bar',     defaultTrad: 12, defaultZW: 15, freqMonths: 3 },
+  { id: 'razor',       label: 'Razors (pack)', zwLabel: 'Safety razor',     defaultTrad: 12, defaultZW: 35, freqMonths: 3 },
+];
+
+const freqOptions = [
+  { label: 'Every 2 weeks', months: 0.5 },
+  { label: 'Monthly',       months: 1   },
+  { label: 'Every 6 weeks', months: 1.5 },
+  { label: 'Every 2 months',months: 2   },
+  { label: 'Every 3 months',months: 3   },
+  { label: 'Every 6 months',months: 6   },
+  { label: 'Once a year',   months: 12  },
+];
+
+const state = {};
+products.forEach(p => {
+  state[p.id] = { trad: p.defaultTrad, zw: p.defaultZW, freq: p.freqMonths };
+});
+
+function buildProducts() {
+  const list = document.getElementById('products-list');
+  products.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    row.innerHTML = `
+      <div class="field">
+        <label>${p.label}</label>
+        <div class="dollar-wrap"><input type="number" min="0" step="0.01" id="trad-${p.id}" value="${p.defaultTrad}"></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="field">
+        <label>${p.zwLabel}</label>
+        <div class="dollar-wrap"><input type="number" min="0" step="0.01" id="zw-${p.id}" value="${p.defaultZW}"></div>
+      </div>
+    `;
+    list.appendChild(row);
+    row.querySelector('#trad-' + p.id).addEventListener('input', e => { state[p.id].trad = parseFloat(e.target.value) || 0; recalc(); });
+    row.querySelector('#zw-' + p.id).addEventListener('input', e => { state[p.id].zw = parseFloat(e.target.value) || 0; recalc(); });
+  });
+}
+
+function buildFreqs() {
+  const list = document.getElementById('freq-list');
+  products.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'freq-row';
+    const opts = freqOptions.map(o =>
+      `<option value="${o.months}"${o.months === p.freqMonths ? ' selected' : ''}>${o.label}</option>`
+    ).join('');
+    row.innerHTML = `
+      <div class="field"><label>${p.label}</label></div>
+      <div class="field"><select id="freq-${p.id}">${opts}</select></div>
+    `;
+    list.appendChild(row);
+    row.querySelector('#freq-' + p.id).addEventListener('change', e => { state[p.id].freq = parseFloat(e.target.value); recalc(); });
+  });
+}
+
+function recalc() {
+  let tradTotal = 0, zwTotal = 0;
+  const per = products.map(p => {
+    const s = state[p.id];
+    const times = 12 / s.freq;
+    const trad = s.trad * times;
+    const zw = s.zw * times;
+    tradTotal += trad;
+    zwTotal += zw;
+    return { label: p.label, trad, zw };
+  });
+
+  const savings = tradTotal - zwTotal;
+  document.getElementById('trad-total').textContent = '$' + Math.round(tradTotal).toLocaleString();
+  document.getElementById('zw-total').textContent = '$' + Math.round(zwTotal).toLocaleString();
+
+  const banner = document.getElementById('savings-banner');
+  const savVal = document.getElementById('savings-value');
+  const savLabel = document.getElementById('savings-label');
+  const savSub = document.getElementById('savings-sub');
+
+  if (savings > 0) {
+    banner.className = 'savings-banner';
+    savLabel.textContent = 'Annual savings';
+    savVal.textContent = '+$' + Math.round(savings).toLocaleString();
+    savVal.style.color = '#a8c5a0';
+    savSub.style.color = '#a8c5a0';
+    savSub.textContent = 'switching to zero waste alternatives';
+  } else if (savings < 0) {
+    banner.className = 'savings-banner overspend';
+    savLabel.textContent = 'Extra annual cost';
+    savVal.textContent = '+$' + Math.round(Math.abs(savings)).toLocaleString();
+    savVal.style.color = '#c5a8a8';
+    savSub.style.color = '#c5a8a8';
+    savSub.textContent = 'for zero waste — but many items last far longer';
+  } else {
+    banner.className = 'savings-banner';
+    savLabel.textContent = 'Annual savings';
+    savVal.textContent = '$0';
+    savSub.textContent = '';
+  }
+
+  const maxVal = Math.max(...per.map(p => Math.max(p.trad, p.zw)), 1);
+  const barsEl = document.getElementById('bars');
+  barsEl.innerHTML = '';
+  per.forEach(p => {
+    const tw = Math.max(Math.round((p.trad / maxVal) * 100), 4);
+    const zw = Math.max(Math.round((p.zw / maxVal) * 100), 4);
+    const div = document.createElement('div');
+    div.className = 'bar-product';
+    div.innerHTML = `
+      <div class="bar-product-name">${p.label}</div>
+      <div class="bar-track"><div class="bar-fill bar-trad" style="width:${tw}%">$${Math.round(p.trad)}/yr</div></div>
+      <div class="bar-track"><div class="bar-fill bar-zw" style="width:${zw}%">$${Math.round(p.zw)}/yr</div></div>
+    `;
+    barsEl.appendChild(div);
+  });
+
+  const tip = document.getElementById('tip-box');
+  if (savings > 50) {
+    const months = Math.round((savings / 12) * 10) / 10;
+    tip.innerHTML = `<strong>At these prices,</strong> zero waste saves you roughly <strong>$${Math.round(savings)}/year</strong> — about $${months.toFixed(0)} a month. Zero waste products often last longer too, so real-world savings could be even higher.`;
+  } else if (savings < -20) {
+    tip.innerHTML = `<strong>Zero waste products often cost more upfront</strong> but last significantly longer. A safety razor, for example, only needs blade replacements (as little as $0.10–0.30 each) after the initial purchase. Try adjusting the frequency to reflect the longer lifespan.`;
+  } else {
+    tip.innerHTML = `<strong>These numbers are close!</strong> Zero waste and traditional products come out roughly even at these prices — but factor in plastic waste and longer product lifespans and the zero waste case gets even stronger.`;
+  }
+}
+
+buildProducts();
+buildFreqs();
+recalc();
+</script>
+</body>
+</html>
