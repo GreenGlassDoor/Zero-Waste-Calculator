@@ -56,11 +56,39 @@
     border-bottom: 1px solid #ede8e0;
   }
 
+  .col-headers {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 0.5rem;
+  }
+
+  .col-headers span {
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9e9284;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .col-headers span.left { text-align: left; }
+  .col-headers span.green { color: #5a8a52; }
+
+  /* Standard row: label | trad-price | trad-freq | arrow | zw-price | zw-freq */
   .product-row {
     display: grid;
-    grid-template-columns: 130px 1fr 20px 1fr;
+    grid-template-columns: 130px 1fr 1fr 20px 1fr 1fr;
     gap: 6px;
-    align-items: start;
+    align-items: end;
+    margin-bottom: 0.65rem;
+  }
+
+  /* Amortized row: label | trad-upfront | trad-ongoing | trad-freq | arrow | zw-upfront | zw-ongoing | zw-freq */
+  .product-row-amort {
+    display: grid;
+    grid-template-columns: 130px 1fr 1fr 1fr 20px 1fr 1fr 1fr;
+    gap: 6px;
+    align-items: end;
     margin-bottom: 0.65rem;
   }
 
@@ -68,8 +96,16 @@
     font-size: 0.78rem;
     color: #2a2318;
     font-weight: 500;
-    padding-top: 4px;
+    padding-bottom: 8px;
     line-height: 1.3;
+  }
+
+  .row-label .sublabel {
+    display: block;
+    font-size: 0.68rem;
+    color: #9e9284;
+    font-weight: 400;
+    margin-top: 2px;
   }
 
   .field { display: flex; flex-direction: column; gap: 2px; }
@@ -139,10 +175,10 @@
     font-size: 0.75rem;
     color: #c4bdb4;
     text-align: center;
-    padding-top: 22px;
+    padding-bottom: 8px;
   }
 
-  .divider { border: none; border-top: 1px solid #ede8e0; margin: 0.75rem 0; }
+  .divider { border: none; border-top: 1px solid #ede8e0; margin: 1.25rem 0; }
 
   .results {
     margin-top: 1.75rem;
@@ -270,7 +306,8 @@
   @media (max-width: 600px) {
     .calc-body { padding: 1.25rem 1rem; }
     .calc-header { padding: 1.5rem 1rem 1.25rem; }
-    .product-row { grid-template-columns: 100px 1fr 16px 1fr; }
+    .product-row { grid-template-columns: 100px 1fr 1fr 16px 1fr 1fr; }
+    .product-row-amort { grid-template-columns: 90px 1fr 1fr 1fr 14px 1fr 1fr 1fr; font-size: 0.7rem; }
     .calc-header h1 { font-size: 1.45rem; }
   }
 </style>
@@ -332,6 +369,9 @@ const freqOptions = [
   { label: 'Once a year',   months: 12  },
 ];
 
+// type: 'standard' or 'amort'
+// amort items have: tradUpfront, tradAmortYears, zwUpfront, zwAmortYears
+// all items have: tradOngoing, zwOngoing, freqMonths (for ongoing)
 const groups = [
   {
     title: 'Dental',
@@ -442,8 +482,7 @@ groups.forEach(g => g.items.forEach(p => {
     zwAmortYears: p.zwAmortYears || 1,
     tradOngoing: p.tradOngoing,
     zwOngoing: p.zwOngoing,
-    freqTrad: p.freqMonths,
-    freqZw: p.freqMonths
+    freq: p.freqMonths
   };
 }));
 
@@ -457,14 +496,7 @@ function freqSelect(id, side, defaultFreq) {
     if (o.months === defaultFreq) opt.selected = true;
     sel.appendChild(opt);
   });
-  sel.addEventListener('change', e => { 
-    if (side === 'zw') {
-      state[id].freqZw = parseFloat(e.target.value); 
-    } else {
-      state[id].freqTrad = parseFloat(e.target.value); 
-    }
-    recalc(); 
-  });
+  sel.addEventListener('change', e => { state[id].freq = parseFloat(e.target.value); recalc(); });
   return sel;
 }
 
@@ -501,12 +533,14 @@ function buildProducts() {
     groupDiv.appendChild(title);
 
     g.items.forEach(p => {
+      // Outer row: label | trad-panel | arrow | zw-panel
       const outer = document.createElement('div');
-      outer.className = 'product-row';
+      outer.style.cssText = 'display:grid;grid-template-columns:130px 1fr 20px 1fr;gap:6px;align-items:start;margin-bottom:0.65rem;';
 
       const labelEl = document.createElement('div');
       labelEl.className = 'row-label';
       labelEl.textContent = p.label;
+      labelEl.style.paddingTop = '4px';
       outer.appendChild(labelEl);
 
       function sidePanel(isZW) {
@@ -539,6 +573,7 @@ function buildProducts() {
 
       const arr = document.createElement('div');
       arr.className = 'arrow';
+      arr.style.paddingTop = '22px';
       arr.textContent = '→';
       outer.appendChild(arr);
 
@@ -565,8 +600,10 @@ function buildProducts() {
 
       groupDiv.appendChild(outer);
 
+      // divider between items within group
       const div = document.createElement('hr');
       div.className = 'divider';
+      div.style.margin = '0.75rem 0';
       groupDiv.appendChild(div);
     });
 
@@ -576,14 +613,11 @@ function buildProducts() {
 
 function annualCost(id) {
   const s = state[id];
-  const timesPerYearTrad = 12 / s.freqTrad;
-  const timesPerYearZw = 12 / s.freqZw;
-  
+  const timesPerYear = 12 / s.freq;
   const tradAmort = s.tradUpfront / s.tradAmortYears;
   const zwAmort = s.zwUpfront / s.zwAmortYears;
-  
-  const trad = tradAmort + (s.tradOngoing * timesPerYearTrad);
-  const zw = zwAmort + (s.zwOngoing * timesPerYearZw);
+  const trad = tradAmort + (s.tradOngoing * timesPerYear);
+  const zw = zwAmort + (s.zwOngoing * timesPerYear);
   return { trad, zw };
 }
 
